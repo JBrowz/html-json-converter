@@ -1,7 +1,7 @@
-import { JSDOM } from 'jsdom';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { JSDOM } from "jsdom";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 export interface HTMLNode {
 	tag: string;
@@ -87,10 +87,7 @@ class ElementTypeMap {
 }
 
 export class HTMLJSONConverter {
-	private static readonly DOCUMENT_INDICATORS = [
-		'<html',
-		'<?xml'
-	];
+	private static readonly DOCUMENT_INDICATORS = ["<html", "<?xml"];
 	private readonly useTab: boolean;
 	private readonly tabSize: number;
 	private readonly elementTypeMap: ElementTypeMap;
@@ -109,16 +106,16 @@ export class HTMLJSONConverter {
 		}
 
 		// Remove DOCTYPE if present to avoid treating it as a full document
-		const htmlWithoutDoctype = trimmedHtml.replace(/<!DOCTYPE[^>]*>/i, '').trim();
+		const htmlWithoutDoctype = trimmedHtml.replace(/<!DOCTYPE[^>]*>/i, "").trim();
 
-		const isFullDocument = HTMLJSONConverter.DOCUMENT_INDICATORS.some(
-			indicator => htmlWithoutDoctype.toLowerCase().startsWith(indicator.toLowerCase())
+		const isFullDocument = HTMLJSONConverter.DOCUMENT_INDICATORS.some((indicator) =>
+			htmlWithoutDoctype.toLowerCase().startsWith(indicator.toLowerCase()),
 		);
 
 		const dom = new JSDOM(htmlWithoutDoctype);
 		const { documentElement, body, head } = dom.window.document;
 
-		if (isFullDocument && documentElement?.tagName.toLowerCase() === 'html') {
+		if (isFullDocument && documentElement?.tagName.toLowerCase() === "html") {
 			return this.elementToJSON(documentElement);
 		}
 
@@ -182,7 +179,7 @@ export class HTMLJSONConverter {
 
 	private elementToJSON(element: Element): HTMLNode {
 		const node: HTMLNode = {
-			tag: element.tagName.toLowerCase()
+			tag: element.tagName.toLowerCase(),
 		};
 
 		this.processAttributes(element, node);
