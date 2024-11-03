@@ -2,29 +2,47 @@
   "name": "html-json-converter",
   "type": "module",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A simple HTML to JSON and JSON to HTML converter",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "node ./dist/index.js",
-    "build": "rimraf ./dist && tsc && tsc-alias"
+    "build": "rimraf dist && tsc",
+    "check-exports": "attw --pack . --ignore-rules=cjs-resolves-to-esm",
+    "test": "vitest run",
+    "test:coverage": "rimraf coverage/.tmp && vitest run --coverage",
+    "ci": "npm run build && npm run check-format && npm run check-exports && npm run test"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "typescript",
+    "html",
+    "json",
+    "converter"
+  ],
+  "author": "Techlism <kundan@techlism.in> (https://portfolio.techlism.in)",
+  "bugs": {
+    "url": "https://github.com/techlism/html-json-converter/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/techlism/html-json-converter.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "license": "MIT",
   "devDependencies": {
-    "@types/express": "^4.17.21",
+    "@arethetypeswrong/cli": "^0.16.4",
     "@types/node": "^20.17.6",
+    "@vitest/coverage-v8": "^2.1.4",
     "rimraf": "^5.0.5",
-    "tsc-alias": "^1.8.8",
     "tsx": "^4.7.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^2.1.4"
   },
   "dependencies": {
     "@types/jsdom": "^21.1.7",
     "@types/tough-cookie": "^4.0.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
     "jsdom": "^25.0.1"
   }
 }

@@ -1,10 +1,25 @@
 import { JSDOM } from 'jsdom';
-import type { HTMLNode } from './types/index.ts';
-import { HTMLElementType, NODE_TYPES } from './types/index.ts';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+export interface HTMLNode {
+	tag: string;
+	attributes?: Record<string, string>;
+	children?: (HTMLNode | string)[];
+}
+
+export enum HTMLElementType {
+	NORMAL = "normal",
+	VOID = "void",
+	RAW_TEXT = "raw-text",
+	FOREIGN = "foreign",
+}
+
+const NODE_TYPES = {
+	ELEMENT_NODE: 1,
+	TEXT_NODE: 3,
+} as const;
 
 class ElementTypeMap {
 	private readonly elementTypes: Record<string, HTMLElementType> = {
@@ -40,7 +55,7 @@ class ElementTypeMap {
 		a: HTMLElementType.NORMAL,
 		button: HTMLElementType.NORMAL,
 
-		// Void elements (Self closing ones)
+		// Void elements
 		area: HTMLElementType.VOID,
 		base: HTMLElementType.VOID,
 		br: HTMLElementType.VOID,
@@ -72,6 +87,10 @@ class ElementTypeMap {
 }
 
 export class HTMLJSONConverter {
+	private static readonly DOCUMENT_INDICATORS = [
+		'<html',
+		'<?xml'
+	];
 	private readonly useTab: boolean;
 	private readonly tabSize: number;
 	private readonly elementTypeMap: ElementTypeMap;
@@ -82,9 +101,36 @@ export class HTMLJSONConverter {
 		this.elementTypeMap = new ElementTypeMap();
 	}
 
-	/**
-	 * Converts an HTMLNode object to pretty-printed HTML string
-	 */
+	toJSON(html: string): HTMLNode {
+		const trimmedHtml = html.trim();
+
+		if (!trimmedHtml) {
+			throw new Error("No HTML element found");
+		}
+
+		// Remove DOCTYPE if present to avoid treating it as a full document
+		const htmlWithoutDoctype = trimmedHtml.replace(/<!DOCTYPE[^>]*>/i, '').trim();
+
+		const isFullDocument = HTMLJSONConverter.DOCUMENT_INDICATORS.some(
+			indicator => htmlWithoutDoctype.toLowerCase().startsWith(indicator.toLowerCase())
+		);
+
+		const dom = new JSDOM(htmlWithoutDoctype);
+		const { documentElement, body, head } = dom.window.document;
+
+		if (isFullDocument && documentElement?.tagName.toLowerCase() === 'html') {
+			return this.elementToJSON(documentElement);
+		}
+
+		// For fragments or DOCTYPE + single element, look for first meaningful element
+		const firstElement = body.firstElementChild || head.firstElementChild;
+		if (!firstElement) {
+			throw new Error("No HTML element found");
+		}
+
+		return this.elementToJSON(firstElement);
+	}
+
 	toHTML(node: HTMLNode | string, level = 0): string {
 		if (typeof node === "string") {
 			const text = node.trim();
@@ -130,20 +176,6 @@ export class HTMLJSONConverter {
 		}
 	}
 
-	/**
-	 * Converts an HTML string to HTMLNode object
-	 */
-	toJSON(html: string): HTMLNode {
-		const dom = new JSDOM(html);
-		const { documentElement } = dom.window.document;
-		
-		if (!documentElement) {
-			throw new Error("No HTML element found");
-		}
-		
-		return this.elementToJSON(documentElement);
-	}
-
 	private getIndent(level: number): string {
 		return this.useTab ? "\t".repeat(level * this.tabSize) : " ".repeat(level * this.tabSize * 2);
 	}
@@ -186,10 +218,10 @@ export class HTMLJSONConverter {
 		}
 
 		const childNodes: NodeList = element.childNodes;
-		
+
 		if (childNodes.length > 0) {
 			node.children = [];
-			
+
 			for (const child of Array.from(childNodes as NodeList)) {
 				if (child.nodeType === NODE_TYPES.TEXT_NODE) {
 					const text = (child as Text).textContent?.trim();
@@ -200,46 +232,10 @@ export class HTMLJSONConverter {
 					node.children.push(this.elementToJSON(child as Element));
 				}
 			}
-			
+
 			if (node.children.length === 0) {
 				node.children = undefined;
 			}
 		}
 	}
 }
-
-// Example usage:
-/*
-const converter = new HTMLJSONConverter(true, 1);  // Use tabs with size 1
-
-const html = `
-<!DOCTYPE html>
-<html>
-	<head><title>Test</title></head>
-	<body>
-		<h1>Hello World</h1>
-		<img src="test.jpg" alt="Test"/>
-	</body>
-</html>
-`;
-
-// Convert HTML to JSON
-const json = converter.toJSON(html);
-console.log(JSON.stringify(json, null, "\t"));
-
-// Convert back to HTML
-const generatedHtml = converter.toHTML(json);
-console.log(generatedHtml);
-*/
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const converter = new HTMLJSONConverter(true, 1);
-
-// Read JSON file from utils folder and then convert it to HTML
-const HtmlFilePath = path.resolve(__dirname, 'utils', 'complex_webpage.html');
-const html  = fs.readFileSync(HtmlFilePath, 'utf-8');
-const json = converter.toJSON(html);
-fs.writeFileSync(path.resolve(__dirname, 'utils', 'complex_webpage.json'), JSON.stringify(json, null, 2));
-
