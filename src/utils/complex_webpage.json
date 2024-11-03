@@ -1,0 +1,471 @@
+{
+  "tag": "html",
+  "attributes": {
+    "lang": "en"
+  },
+  "children": [
+    {
+      "tag": "head",
+      "children": [
+        {
+          "tag": "meta",
+          "attributes": {
+            "charset": "UTF-8"
+          }
+        },
+        {
+          "tag": "meta",
+          "attributes": {
+            "name": "viewport",
+            "content": "width=device-width, initial-scale=1.0"
+          }
+        },
+        {
+          "tag": "title",
+          "children": [
+            "Complex Webpage Example"
+          ]
+        },
+        {
+          "tag": "style",
+          "children": [
+            ".container {\n\t\t\tmax-width: 1200px;\n\t\t\tmargin: 0 auto;\n\t\t}\n\n\t\tbody {\n\t\t\tfont-family: \"Roboto\", sans-serif;\n\t\t\tmargin: 0;\n\t\t\tpadding: 0;\n\t\t}\n\n\t\t.header {\n\t\t\tbackground-color: #f8f9fa;\n\t\t\tpadding: 1rem;\n\t\t}\n\n\t\t.nav-item {\n\t\t\tdisplay: inline-block;\n\t\t\tmargin-right: 1rem;\n\t\t}\n\n\t\t.card {\n\t\t\tborder: 1px solid #ddd;\n\t\t\tpadding: 1rem;\n\t\t\tmargin: 1rem 0;\n\t\t}\n\n\t\t.footer {\n\t\t\tbackground-color: #333;\n\t\t\tcolor: white;\n\t\t\tpadding: 2rem;\n\t\t}"
+          ]
+        },
+        {
+          "tag": "link",
+          "attributes": {
+            "rel": "preconnect",
+            "href": "https://fonts.googleapis.com"
+          }
+        },
+        {
+          "tag": "link",
+          "attributes": {
+            "rel": "preconnect",
+            "href": "https://fonts.gstatic.com",
+            "crossorigin": ""
+          }
+        },
+        {
+          "tag": "link",
+          "attributes": {
+            "href": "https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;500&display=swap",
+            "rel": "stylesheet"
+          }
+        }
+      ]
+    },
+    {
+      "tag": "body",
+      "children": [
+        {
+          "tag": "header",
+          "attributes": {
+            "class": "header"
+          },
+          "children": [
+            {
+              "tag": "nav",
+              "children": [
+                {
+                  "tag": "ul",
+                  "attributes": {
+                    "class": "nav-list"
+                  },
+                  "children": [
+                    {
+                      "tag": "li",
+                      "attributes": {
+                        "class": "nav-item"
+                      },
+                      "children": [
+                        {
+                          "tag": "a",
+                          "attributes": {
+                            "href": "#home"
+                          },
+                          "children": [
+                            "Home"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "tag": "li",
+                      "attributes": {
+                        "class": "nav-item"
+                      },
+                      "children": [
+                        {
+                          "tag": "a",
+                          "attributes": {
+                            "href": "#about"
+                          },
+                          "children": [
+                            "About"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "tag": "li",
+                      "attributes": {
+                        "class": "nav-item"
+                      },
+                      "children": [
+                        {
+                          "tag": "a",
+                          "attributes": {
+                            "href": "#contact"
+                          },
+                          "children": [
+                            "Contact"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "main",
+          "attributes": {
+            "class": "container"
+          },
+          "children": [
+            {
+              "tag": "section",
+              "attributes": {
+                "id": "hero",
+                "class": "hero-section"
+              },
+              "children": [
+                {
+                  "tag": "h1",
+                  "children": [
+                    "Welcome to Our Complex Webpage"
+                  ]
+                },
+                {
+                  "tag": "p",
+                  "children": [
+                    "This is a comprehensive example showcasing various HTML elements and\n\t\t\t\tstructures."
+                  ]
+                }
+              ]
+            },
+            {
+              "tag": "section",
+              "attributes": {
+                "id": "features",
+                "class": "features-section"
+              },
+              "children": [
+                {
+                  "tag": "h2",
+                  "children": [
+                    "Featured Content"
+                  ]
+                },
+                {
+                  "tag": "div",
+                  "attributes": {
+                    "class": "card-grid"
+                  },
+                  "children": [
+                    {
+                      "tag": "article",
+                      "attributes": {
+                        "class": "card"
+                      },
+                      "children": [
+                        {
+                          "tag": "h3",
+                          "children": [
+                            "Feature 1"
+                          ]
+                        },
+                        {
+                          "tag": "p",
+                          "children": [
+                            "Description of feature 1 goes here."
+                          ]
+                        },
+                        {
+                          "tag": "button",
+                          "attributes": {
+                            "class": "btn"
+                          },
+                          "children": [
+                            "Learn More"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "tag": "article",
+                      "attributes": {
+                        "class": "card"
+                      },
+                      "children": [
+                        {
+                          "tag": "h3",
+                          "children": [
+                            "Feature 2"
+                          ]
+                        },
+                        {
+                          "tag": "p",
+                          "children": [
+                            "Description of feature 2 goes here."
+                          ]
+                        },
+                        {
+                          "tag": "button",
+                          "attributes": {
+                            "class": "btn"
+                          },
+                          "children": [
+                            "Learn More"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "tag": "section",
+              "attributes": {
+                "id": "form-section",
+                "class": "contact-form"
+              },
+              "children": [
+                {
+                  "tag": "h2",
+                  "children": [
+                    "Contact Us"
+                  ]
+                },
+                {
+                  "tag": "form",
+                  "attributes": {
+                    "action": "/submit",
+                    "method": "POST",
+                    "class": "contact-form"
+                  },
+                  "children": [
+                    {
+                      "tag": "div",
+                      "attributes": {
+                        "class": "form-group"
+                      },
+                      "children": [
+                        {
+                          "tag": "label",
+                          "attributes": {
+                            "for": "name"
+                          },
+                          "children": [
+                            "Name:"
+                          ]
+                        },
+                        {
+                          "tag": "input",
+                          "attributes": {
+                            "type": "text",
+                            "id": "name",
+                            "name": "name",
+                            "required": "true"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "tag": "div",
+                      "attributes": {
+                        "class": "form-group"
+                      },
+                      "children": [
+                        {
+                          "tag": "label",
+                          "attributes": {
+                            "for": "email"
+                          },
+                          "children": [
+                            "Email:"
+                          ]
+                        },
+                        {
+                          "tag": "input",
+                          "attributes": {
+                            "type": "email",
+                            "id": "email",
+                            "name": "email",
+                            "required": "true"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "tag": "div",
+                      "attributes": {
+                        "class": "form-group"
+                      },
+                      "children": [
+                        {
+                          "tag": "label",
+                          "attributes": {
+                            "for": "message"
+                          },
+                          "children": [
+                            "Message:"
+                          ]
+                        },
+                        {
+                          "tag": "textarea",
+                          "attributes": {
+                            "id": "message",
+                            "name": "message",
+                            "rows": "4",
+                            "required": "true"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "tag": "button",
+                      "attributes": {
+                        "type": "submit",
+                        "class": "btn btn-submit"
+                      },
+                      "children": [
+                        "Send Message"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "footer",
+          "attributes": {
+            "class": "footer"
+          },
+          "children": [
+            {
+              "tag": "div",
+              "attributes": {
+                "class": "container"
+              },
+              "children": [
+                {
+                  "tag": "div",
+                  "attributes": {
+                    "class": "footer-content"
+                  },
+                  "children": [
+                    {
+                      "tag": "div",
+                      "attributes": {
+                        "class": "footer-section"
+                      },
+                      "children": [
+                        {
+                          "tag": "h4",
+                          "children": [
+                            "About Us"
+                          ]
+                        },
+                        {
+                          "tag": "p",
+                          "children": [
+                            "Some information about the company goes here."
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "tag": "div",
+                      "attributes": {
+                        "class": "footer-section"
+                      },
+                      "children": [
+                        {
+                          "tag": "h4",
+                          "children": [
+                            "Quick Links"
+                          ]
+                        },
+                        {
+                          "tag": "ul",
+                          "children": [
+                            {
+                              "tag": "li",
+                              "children": [
+                                {
+                                  "tag": "a",
+                                  "attributes": {
+                                    "href": "#"
+                                  },
+                                  "children": [
+                                    "Privacy Policy"
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "tag": "li",
+                              "children": [
+                                {
+                                  "tag": "a",
+                                  "attributes": {
+                                    "href": "#"
+                                  },
+                                  "children": [
+                                    "Terms of Service"
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "tag": "div",
+                  "attributes": {
+                    "class": "footer-bottom"
+                  },
+                  "children": [
+                    {
+                      "tag": "p",
+                      "children": [
+                        "© 2024 Complex Webpage Example. All rights reserved."
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "script",
+          "children": [
+            "document.addEventListener(\"DOMContentLoaded\", function () {\n\t\t\tconsole.log(\"Page loaded successfully!\");\n\t\t\t// Initialize any necessary JavaScript functionality\n\t\t\tconst buttons = document.querySelectorAll(\".btn\");\n\t\t\tbuttons.forEach((button) => {\n\t\t\t\tbutton.addEventListener(\"click\", function () {\n\t\t\t\t\tconsole.log(\"Button clicked!\");\n\t\t\t\t});\n\t\t\t});\n\t\t});"
+          ]
+        }
+      ]
+    }
+  ]
+}
