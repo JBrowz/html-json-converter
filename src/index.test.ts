@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, test } from "vitest";
 import { HTMLJSONConverter } from "./index.js";
+import { ClientHTMLJSONConverter } from "./index.js";
 
 describe("HTMLJSONConverter", () => {
 	const converter = new HTMLJSONConverter(true, 1);
@@ -151,4 +152,83 @@ describe("HTMLJSONConverter", () => {
 			});
 		});
 	});
+});
+
+
+describe('ClientHTMLJSONConverter', () => {
+    let converter: ClientHTMLJSONConverter;
+
+    beforeEach(() => {
+        converter = new ClientHTMLJSONConverter();
+    });
+
+    test('converts simple HTML to JSON', () => {
+        const html = '<div class="test">Hello World</div>';
+        const expected = {
+            tag: 'div',
+            attributes: { class: 'test' },
+            children: ['Hello World']
+        };
+
+        const result = converter.toJSON(html);
+        expect(result).toEqual(expected);
+    });
+
+    test('converts nested HTML to JSON', () => {
+        const html = `
+            <div class="container">
+                <h1>Title</h1>
+                <p>Paragraph</p>
+            </div>
+        `;
+        
+        const result = converter.toJSON(html);
+        expect(result).toEqual({
+            tag: 'div',
+            attributes: { class: 'container' },
+            children: [
+                {
+                    tag: 'h1',
+                    children: ['Title']
+                },
+                {
+                    tag: 'p',
+                    children: ['Paragraph']
+                }
+            ]
+        });
+    });
+
+    test('converts void elements correctly', () => {
+        const html = '<img src="test.jpg" alt="test"/>';
+        const result = converter.toJSON(html);
+        expect(result).toEqual({
+            tag: 'img',
+            attributes: {
+                src: 'test.jpg',
+                alt: 'test'
+            }
+        });
+    });
+
+    test('handles HTML to JSON to HTML roundtrip', () => {
+        const originalHtml = '<div class="test"><p>Hello</p></div>';
+        const json = converter.toJSON(originalHtml);
+        const html = converter.toHTML(json).trim();
+        
+        // Convert both back to JSON to compare (since HTML whitespace might differ)
+        const originalJson = converter.toJSON(originalHtml);
+        const finalJson = converter.toJSON(html);
+        
+        expect(finalJson).toEqual(originalJson);
+    });
+
+    test('handles malformed HTML', () => {
+        const html = '<div>Unclosed div';
+        expect(() => converter.toJSON(html)).not.toThrow();
+    });
+
+    test('throws error for empty input', () => {
+        expect(() => converter.toJSON('')).toThrow('No HTML element found');
+    });
 });

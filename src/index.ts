@@ -1,7 +1,4 @@
 import { JSDOM } from "jsdom";
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 export interface HTMLNode {
 	tag: string;
@@ -86,17 +83,28 @@ class ElementTypeMap {
 	}
 }
 
+/**
+ * Class to convert HTML to JSON and vice versa (Server-side)
+ * @param useTab - Use tabs for indentation (default: true)
+ * @param tabSize - Number of spaces per tab (default: 1)
+ */
+
 export class HTMLJSONConverter {
-	private static readonly DOCUMENT_INDICATORS = ["<html", "<?xml"];
-	private readonly useTab: boolean;
-	private readonly tabSize: number;
-	private readonly elementTypeMap: ElementTypeMap;
+	protected static readonly DOCUMENT_INDICATORS = ["<html", "<?xml"];
+	protected readonly useTab: boolean;
+	protected readonly tabSize: number;
+	protected readonly elementTypeMap: ElementTypeMap;
 
 	constructor(useTab = true, tabSize = 1) {
 		this.useTab = useTab;
 		this.tabSize = tabSize;
 		this.elementTypeMap = new ElementTypeMap();
 	}
+
+	/**
+	 * Convert HTML string to JSON
+	 * @param html - HTML string
+	 */
 
 	toJSON(html: string): HTMLNode {
 		const trimmedHtml = html.trim();
@@ -127,6 +135,11 @@ export class HTMLJSONConverter {
 
 		return this.elementToJSON(firstElement);
 	}
+
+	/**
+	 * Convert JSON to HTML string
+	 * @param node - HTMLNode | string
+	 */
 
 	toHTML(node: HTMLNode | string, level = 0): string {
 		if (typeof node === "string") {
@@ -173,11 +186,11 @@ export class HTMLJSONConverter {
 		}
 	}
 
-	private getIndent(level: number): string {
+	protected getIndent(level: number): string {
 		return this.useTab ? "\t".repeat(level * this.tabSize) : " ".repeat(level * this.tabSize * 2);
 	}
 
-	private elementToJSON(element: Element): HTMLNode {
+	protected elementToJSON(element: Element): HTMLNode {
 		const node: HTMLNode = {
 			tag: element.tagName.toLowerCase(),
 		};
@@ -188,7 +201,7 @@ export class HTMLJSONConverter {
 		return node;
 	}
 
-	private processAttributes(element: Element, node: HTMLNode): void {
+	protected processAttributes(element: Element, node: HTMLNode): void {
 		const attributes = element.attributes;
 		if (attributes.length > 0) {
 			node.attributes = {};
@@ -199,7 +212,7 @@ export class HTMLJSONConverter {
 		}
 	}
 
-	private processChildren(element: Element, node: HTMLNode): void {
+	protected processChildren(element: Element, node: HTMLNode): void {
 		const elementType = this.elementTypeMap.getElementType(node.tag);
 
 		if (elementType === HTMLElementType.VOID) {
@@ -235,4 +248,104 @@ export class HTMLJSONConverter {
 			}
 		}
 	}
+}
+
+
+/**
+ * Class to convert HTML to JSON and vice versa (Client-side)
+ */
+export class ClientHTMLJSONConverter extends HTMLJSONConverter {
+    private readonly parser: DOMParser;
+
+    constructor(useTab = true, tabSize = 1) {
+        super(useTab, tabSize);
+        this.parser = new DOMParser();
+    }
+
+    override toJSON(html: string): HTMLNode {
+        const trimmedHtml = html.trim();
+
+        if (!trimmedHtml) {
+            throw new Error("No HTML element found");
+        }
+
+        const htmlWithoutDoctype = trimmedHtml.replace(/<!DOCTYPE[^>]*>/i, "").trim();
+
+        const isFullDocument = HTMLJSONConverter.DOCUMENT_INDICATORS.some((indicator) =>
+            htmlWithoutDoctype.toLowerCase().startsWith(indicator.toLowerCase())
+        );
+
+        const doc = this.parser.parseFromString(htmlWithoutDoctype, "text/html");
+        const { documentElement, body, head } = doc;
+
+        if (isFullDocument && documentElement?.tagName.toLowerCase() === "html") {
+            return this.elementToJSON(documentElement);
+        }
+
+        const firstElement = body.firstElementChild || head.firstElementChild;
+        if (!firstElement) {
+            throw new Error("No HTML element found");
+        }
+
+        return this.elementToJSON(firstElement);
+    }
+
+    protected override elementToJSON(element: Element): HTMLNode {
+        const node: HTMLNode = {
+            tag: element.tagName.toLowerCase(),
+        };
+
+        this.processAttributes(element, node);
+        this.processChildren(element, node);
+
+        return node;
+    }
+
+    protected override processAttributes(element: Element, node: HTMLNode): void {
+        const attributes = element.attributes;
+        if (attributes.length > 0) {
+            node.attributes = {};
+            for (const attribute of Array.from(attributes)) {
+                if (!node.attributes) return;
+                node.attributes[attribute.name] = attribute.value;
+            }
+        }
+    }
+
+    protected override processChildren(element: Element, node: HTMLNode): void {
+        const elementType = this.elementTypeMap.getElementType(node.tag);
+
+        if (elementType === HTMLElementType.VOID) {
+            return;
+        }
+
+        if (elementType === HTMLElementType.RAW_TEXT) {
+            const text = element.textContent?.trim();
+            if (text) {
+                node.children = [text];
+            }
+            return;
+        }
+
+        const childNodes = element.childNodes;
+
+        if (childNodes.length > 0) {
+            node.children = [];
+
+            for (const child of Array.from(childNodes)) {
+                if (child.nodeType === Node.TEXT_NODE) {
+                    const text = child.textContent?.trim();
+                    if (text) {
+                        node.children.push(text);
+                    }
+                } else if (child.nodeType === Node.ELEMENT_NODE) {
+                    node.children.push(this.elementToJSON(child as Element));
+                }
+            }
+
+            if (node.children.length === 0) {
+                node.children = undefined;
+            }
+        }
+    }
 }
