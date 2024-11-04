@@ -13,7 +13,7 @@ export class ServerHTMLJSONConverter extends BaseHTMLJSONConverter {
 		const { documentElement, body, head } = dom.window.document;
 
 		const isFullDocument = BaseHTMLJSONConverter.DOCUMENT_INDICATORS.some((indicator) =>
-			html.toLowerCase().startsWith(indicator.toLowerCase())
+			html.toLowerCase().startsWith(indicator.toLowerCase()),
 		);
 
 		if (isFullDocument && documentElement?.tagName.toLowerCase() === "html") {

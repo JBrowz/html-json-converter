@@ -97,9 +97,7 @@ describe("ServerHTMLJSONConverter", () => {
 				children: ["Invalid content"],
 			};
 
-			expect(() => converter.toHTML(json)).toThrow(
-				"Void element <img> cannot have children."
-			);
+			expect(() => converter.toHTML(json)).toThrow("Void element <img> cannot have children.");
 		});
 
 		it("should handle nested elements", () => {
@@ -126,14 +124,14 @@ describe("ServerHTMLJSONConverter", () => {
 \t<p>
 \t\tParagraph
 \t</p>
-</div>`
+</div>`,
 			);
 		});
 	});
 
 	describe("Enforcement of void element rules", () => {
 		it("should handle invalid HTML where void elements have children gracefully", () => {
-			const html = '<br>Line break</br>';
+			const html = "<br>Line break</br>";
 			const result = converter.toJSON(html);
 			expect(result.tag).toBe("br");
 			expect(result.children).toBeUndefined(); // No children due to parser correction
@@ -144,9 +142,7 @@ describe("ServerHTMLJSONConverter", () => {
 				tag: "hr",
 				children: ["Invalid content"],
 			};
-			expect(() => converter.toHTML(json)).toThrow(
-				"Void element <hr> cannot have children."
-			);
+			expect(() => converter.toHTML(json)).toThrow("Void element <hr> cannot have children.");
 		});
 	});
 
@@ -189,15 +185,11 @@ describe("ServerHTMLJSONConverter", () => {
 		});
 
 		it("should throw error for HTML comment only", () => {
-			expect(() => converter.toJSON("<!-- comment -->")).toThrow(
-				"No HTML element found"
-			);
+			expect(() => converter.toJSON("<!-- comment -->")).toThrow("No HTML element found");
 		});
 
 		it("should throw error for text-only fragment", () => {
-			expect(() => converter.toJSON("Just some text")).toThrow(
-				"No HTML element found"
-			);
+			expect(() => converter.toJSON("Just some text")).toThrow("No HTML element found");
 		});
 
 		it("should handle malformed HTML gracefully", () => {
@@ -222,14 +214,14 @@ describe("ServerHTMLJSONConverter", () => {
 
 				// Find the <body> element within the children
 				const bodyElement = (result.children as HTMLNode[]).find(
-					(child) => (child as HTMLNode).tag === "body"
+					(child) => (child as HTMLNode).tag === "body",
 				) as HTMLNode;
 
 				expect(bodyElement).toBeDefined();
 
 				// Find the <not-valid> element within the body
 				const notValidElement = (bodyElement.children as HTMLNode[]).find(
-					(child) => (child as HTMLNode).tag === "not-valid"
+					(child) => (child as HTMLNode).tag === "not-valid",
 				);
 
 				expect(notValidElement).toEqual({
@@ -237,7 +229,6 @@ describe("ServerHTMLJSONConverter", () => {
 					children: ["Test"],
 				});
 			});
-
 
 			it("should process document fragments normally", () => {
 				const html = "<main><article>Content</article></main>";
@@ -364,13 +355,13 @@ describe("ClientHTMLJSONConverter", () => {
 		});
 
 		test("handles full HTML documents", () => {
-			const html = '<!DOCTYPE html><html><head><title>Test</title></head><body></body></html>';
+			const html = "<!DOCTYPE html><html><head><title>Test</title></head><body></body></html>";
 			const result = converter.toJSON(html);
 			expect(result.tag).toBe("html");
 		});
 
 		test("handles head-only elements", () => {
-			const html = '<head><title>Test</title></head>';
+			const html = "<head><title>Test</title></head>";
 			const result = converter.toJSON(html);
 			expect(result.tag).toBe("head");
 		});

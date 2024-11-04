@@ -246,7 +246,7 @@ export abstract class BaseHTMLJSONConverter {
 	protected abstract parseHTML(html: string): Element;
 
 	/**
-	 * 
+	 *
 	 * @param html : string
 	 * @returns HTMLNode
 	 */
@@ -262,8 +262,8 @@ export abstract class BaseHTMLJSONConverter {
 	}
 
 	/**
-	 * 
-	 * @param node 
+	 *
+	 * @param node
 	 * @param level (default = 0)
 	 * @returns html string
 	 */
