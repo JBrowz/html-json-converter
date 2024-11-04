@@ -4,6 +4,14 @@
   "version": "3.0.0",
   "description": "A simple HTML to JSON and JSON to HTML converter",
   "main": "dist/index.js",
+  "client": "dist/client.js",
+  "exports" : {
+    ".": {
+      "client" : "./dist/client.js",
+      "server" : "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "node ./dist/index.js",
@@ -22,7 +30,13 @@
     "typescript",
     "html",
     "json",
-    "converter"
+    "converter",
+    "html-to-json",
+    "html to json",
+    "json-to-html",
+    "json to html",
+    "html to json converter",
+    "json to html converter"
   ],
   "author": "Techlism <kundan@techlism.in> (https://github.com/techlism)",
   "bugs": {

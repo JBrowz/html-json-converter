@@ -362,11 +362,13 @@ const json = converter.toJSON(html);
 You can customize the converter's behavior using the `ConverterConfig` interface.
 
 ```typescript
-const config = {
+import { type ConverterConfig, HTMLElementType,ServerHTMLJSONConverter } from 'html-json-converter';
+
+const config : ConverterConfig = {
   useTab: false,      // Use spaces instead of tabs for indentation
   tabSize: 2,         // Number of spaces per indentation level
   customElements: {   // Register custom elements
-    'custom-tag': { type: 'normal', allowChildren: true, allowAttributes: true }
+    'custom-tag': { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true }
   }
 };
 

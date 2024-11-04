@@ -355,4 +355,24 @@ describe("ClientHTMLJSONConverter", () => {
 	test("throws error for empty input", () => {
 		expect(() => converter.toJSON("")).toThrow("No HTML element found");
 	});
+	// Add these tests to index.test.ts
+	describe("ClientHTMLJSONConverter edge cases", () => {
+		let converter: ClientHTMLJSONConverter;
+
+		beforeEach(() => {
+			converter = new ClientHTMLJSONConverter();
+		});
+
+		test("handles full HTML documents", () => {
+			const html = '<!DOCTYPE html><html><head><title>Test</title></head><body></body></html>';
+			const result = converter.toJSON(html);
+			expect(result.tag).toBe("html");
+		});
+
+		test("handles head-only elements", () => {
+			const html = '<head><title>Test</title></head>';
+			const result = converter.toJSON(html);
+			expect(result.tag).toBe("head");
+		});
+	});
 });
