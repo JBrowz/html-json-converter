@@ -39,6 +39,8 @@ npm install html-json-converter
 
 ```typescript
 import { ServerHTMLJSONConverter } from 'html-json-converter';
+// OR use the below import if you want to be specific (Recommended)
+import { ServerHTMLJSONConverter } from 'html-json-converter/server';
 
 const converter = new ServerHTMLJSONConverter();
 
@@ -72,7 +74,8 @@ console.log(htmlOutput);
 ### Browser Usage
 
 ```typescript
-import { ClientHTMLJSONConverter } from 'html-json-converter';
+// This is the only way to import the client-side version of the library.
+import { ClientHTMLJSONConverter } from 'html-json-converter/client';
 
 const converter = new ClientHTMLJSONConverter();
 
@@ -333,9 +336,10 @@ const docJson = converter.toJSON(doc);
 You can register custom elements with specific behaviors.
 
 ```typescript
+import { ServerHTMLJSONConverter, HTMLElementType } from 'html-json-converter';
 const customElements = {
-  'my-component': { type: 'normal', allowChildren: true, allowAttributes: true },
-  'my-void-element': { type: 'void', allowChildren: false, allowAttributes: true }
+  'my-component': { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+  'my-void-element': { type: HTMLElementType.VOID, allowChildren: false, allowAttributes: true }
 };
 
 const converter = new ServerHTMLJSONConverter({ customElements });

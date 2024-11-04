@@ -6,11 +6,9 @@
   "main": "dist/index.js",
   "client": "dist/client.js",
   "exports": {
-    ".": {
-      "client": "./dist/client.js",
-      "server": "./dist/index.js",
-      "default": "./dist/index.js"
-    }
+    "./client": "./dist/client.js",
+    "./server": "./dist/server.js",
+    ".": "./dist/index.js"
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -47,7 +45,9 @@
     "url": "git+https://github.com/techlism/html-json-converter.git"
   },
   "files": [
-    "dist"
+    "dist",
+    "dist/client.js",
+    "dist/server.js"
   ],
   "license": "MIT",
   "devDependencies": {

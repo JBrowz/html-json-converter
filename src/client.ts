@@ -1,4 +1,4 @@
-import { BaseHTMLJSONConverter, type ConverterConfig } from "./base.js";
+import { BaseHTMLJSONConverter } from "./base.js";
 // Client-side implementation
 export class ClientHTMLJSONConverter extends BaseHTMLJSONConverter {
     protected parseHTML(html: string): Element {
