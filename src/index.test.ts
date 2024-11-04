@@ -1,9 +1,14 @@
 import { describe, it, expect, beforeEach, test } from "vitest";
-import { HTMLJSONConverter } from "./index.js";
+import { type HTMLNode, ServerHTMLJSONConverter } from "./index.js"; // Adjust the import path as needed
 import { ClientHTMLJSONConverter } from "./index.js";
 
-describe("HTMLJSONConverter", () => {
-	const converter = new HTMLJSONConverter(true, 1);
+// Tests for ServerHTMLJSONConverter
+describe("ServerHTMLJSONConverter", () => {
+	let converter: ServerHTMLJSONConverter;
+
+	beforeEach(() => {
+		converter = new ServerHTMLJSONConverter();
+	});
 
 	describe("HTML to JSON conversion", () => {
 		it("should convert simple HTML to JSON", () => {
@@ -18,7 +23,7 @@ describe("HTMLJSONConverter", () => {
 			expect(result).toEqual(expected);
 		});
 
-		it("should handle void elements", () => {
+		it("should handle void elements without children", () => {
 			const html = '<img src="test.jpg" alt="Test"/>';
 			const expected = {
 				tag: "img",
@@ -32,18 +37,28 @@ describe("HTMLJSONConverter", () => {
 			expect(result).toEqual(expected);
 		});
 
+		it("should handle invalid HTML where void elements have children gracefully", () => {
+			const html = '<img src="test.jpg">Invalid content</img>';
+			const result = converter.toJSON(html);
+			expect(result.tag).toBe("img");
+			expect(result.children).toBeUndefined(); // No children due to parser correction
+		});
+
 		it("should handle nested elements", () => {
 			const html = `
-                <div>
-                    <h1>Title</h1>
-                    <p>Paragraph</p>
-                </div>
-            `;
+        <div>
+          <h1>Title</h1>
+          <p>Paragraph</p>
+        </div>
+      `;
 
 			const result = converter.toJSON(html);
 			expect(result.tag).toBe("div");
 			expect(result.children).toHaveLength(2);
-			expect(typeof result?.children?.[0] === "object" && result.children[0].tag).toBe("h1");
+			expect(result.children?.[0]).toEqual({
+				tag: "h1",
+				children: ["Title"],
+			});
 		});
 	});
 
@@ -59,7 +74,7 @@ describe("HTMLJSONConverter", () => {
 			expect(result).toBe('<div class="test">\n\tHello\n</div>');
 		});
 
-		it("should handle void elements", () => {
+		it("should handle void elements without children", () => {
 			const json = {
 				tag: "img",
 				attributes: {
@@ -70,6 +85,81 @@ describe("HTMLJSONConverter", () => {
 
 			const result = converter.toHTML(json).trim();
 			expect(result).toBe('<img src="test.jpg" alt="Test"/>');
+		});
+
+		it("should throw an error if void elements have children in JSON", () => {
+			const json = {
+				tag: "img",
+				attributes: {
+					src: "test.jpg",
+					alt: "Test",
+				},
+				children: ["Invalid content"],
+			};
+
+			expect(() => converter.toHTML(json)).toThrow(
+				"Void element <img> cannot have children."
+			);
+		});
+
+		it("should handle nested elements", () => {
+			const json = {
+				tag: "div",
+				children: [
+					{
+						tag: "h1",
+						children: ["Title"],
+					},
+					{
+						tag: "p",
+						children: ["Paragraph"],
+					},
+				],
+			};
+
+			const result = converter.toHTML(json).trim();
+			expect(result).toBe(
+				`<div>
+\t<h1>
+\t\tTitle
+\t</h1>
+\t<p>
+\t\tParagraph
+\t</p>
+</div>`
+			);
+		});
+	});
+
+	describe("Enforcement of void element rules", () => {
+		it("should handle invalid HTML where void elements have children gracefully", () => {
+			const html = '<br>Line break</br>';
+			const result = converter.toJSON(html);
+			expect(result.tag).toBe("br");
+			expect(result.children).toBeUndefined(); // No children due to parser correction
+		});
+
+		it("should throw an error when converting JSON with void elements having children", () => {
+			const json = {
+				tag: "hr",
+				children: ["Invalid content"],
+			};
+			expect(() => converter.toHTML(json)).toThrow(
+				"Void element <hr> cannot have children."
+			);
+		});
+	});
+
+	describe("Enforcement of non-void element rules", () => {
+		it("should not self-close non-void elements in HTML output", () => {
+			const json = {
+				tag: "div",
+				attributes: { class: "container" },
+				// No children
+			};
+
+			const result = converter.toHTML(json).trim();
+			expect(result).toBe('<div class="container"></div>');
 		});
 	});
 
@@ -99,11 +189,15 @@ describe("HTMLJSONConverter", () => {
 		});
 
 		it("should throw error for HTML comment only", () => {
-			expect(() => converter.toJSON("<!-- comment -->")).toThrow("No HTML element found");
+			expect(() => converter.toJSON("<!-- comment -->")).toThrow(
+				"No HTML element found"
+			);
 		});
 
 		it("should throw error for text-only fragment", () => {
-			expect(() => converter.toJSON("Just some text")).toThrow("No HTML element found");
+			expect(() => converter.toJSON("Just some text")).toThrow(
+				"No HTML element found"
+			);
 		});
 
 		it("should handle malformed HTML gracefully", () => {
@@ -124,18 +218,38 @@ describe("HTMLJSONConverter", () => {
 			it("should handle incomplete HTML document structure", () => {
 				const html = "<!DOCTYPE html><html><not-valid>Test</not-valid></html>";
 				const result = converter.toJSON(html);
-				// Should extract first meaningful element or html element
 				expect(result.tag).toBe("html");
-				expect(result.children?.[0]).toBeDefined();
+
+				// Find the <body> element within the children
+				const bodyElement = (result.children as HTMLNode[]).find(
+					(child) => (child as HTMLNode).tag === "body"
+				) as HTMLNode;
+
+				expect(bodyElement).toBeDefined();
+
+				// Find the <not-valid> element within the body
+				const notValidElement = (bodyElement.children as HTMLNode[]).find(
+					(child) => (child as HTMLNode).tag === "not-valid"
+				);
+
+				expect(notValidElement).toEqual({
+					tag: "not-valid",
+					children: ["Test"],
+				});
 			});
+
 
 			it("should process document fragments normally", () => {
 				const html = "<main><article>Content</article></main>";
 				const result = converter.toJSON(html);
 				expect(result.tag).toBe("main");
-				expect(typeof result.children?.[0] === "object" && result.children[0].tag).toBe("article");
+				expect(result.children?.[0]).toEqual({
+					tag: "article",
+					children: ["Content"],
+				});
 			});
 		});
+
 		describe("Edge cases", () => {
 			it("should set children to undefined when no meaningful children exist", () => {
 				const html = "<div>     </div>"; // div with only whitespace
@@ -154,81 +268,91 @@ describe("HTMLJSONConverter", () => {
 	});
 });
 
+// Tests for ClientHTMLJSONConverter
+describe("ClientHTMLJSONConverter", () => {
+	let converter: ClientHTMLJSONConverter;
 
-describe('ClientHTMLJSONConverter', () => {
-    let converter: ClientHTMLJSONConverter;
+	beforeEach(() => {
+		converter = new ClientHTMLJSONConverter();
+	});
 
-    beforeEach(() => {
-        converter = new ClientHTMLJSONConverter();
-    });
+	test("converts simple HTML to JSON", () => {
+		const html = '<div class="test">Hello World</div>';
+		const expected = {
+			tag: "div",
+			attributes: { class: "test" },
+			children: ["Hello World"],
+		};
 
-    test('converts simple HTML to JSON', () => {
-        const html = '<div class="test">Hello World</div>';
-        const expected = {
-            tag: 'div',
-            attributes: { class: 'test' },
-            children: ['Hello World']
-        };
+		const result = converter.toJSON(html);
+		expect(result).toEqual(expected);
+	});
 
-        const result = converter.toJSON(html);
-        expect(result).toEqual(expected);
-    });
+	test("converts nested HTML to JSON", () => {
+		const html = `
+      <div class="container">
+        <h1>Title</h1>
+        <p>Paragraph</p>
+      </div>
+    `;
 
-    test('converts nested HTML to JSON', () => {
-        const html = `
-            <div class="container">
-                <h1>Title</h1>
-                <p>Paragraph</p>
-            </div>
-        `;
-        
-        const result = converter.toJSON(html);
-        expect(result).toEqual({
-            tag: 'div',
-            attributes: { class: 'container' },
-            children: [
-                {
-                    tag: 'h1',
-                    children: ['Title']
-                },
-                {
-                    tag: 'p',
-                    children: ['Paragraph']
-                }
-            ]
-        });
-    });
+		const result = converter.toJSON(html);
+		expect(result).toEqual({
+			tag: "div",
+			attributes: { class: "container" },
+			children: [
+				{
+					tag: "h1",
+					children: ["Title"],
+				},
+				{
+					tag: "p",
+					children: ["Paragraph"],
+				},
+			],
+		});
+	});
 
-    test('converts void elements correctly', () => {
-        const html = '<img src="test.jpg" alt="test"/>';
-        const result = converter.toJSON(html);
-        expect(result).toEqual({
-            tag: 'img',
-            attributes: {
-                src: 'test.jpg',
-                alt: 'test'
-            }
-        });
-    });
+	test("converts void elements correctly", () => {
+		const html = '<img src="test.jpg" alt="test"/>';
+		const result = converter.toJSON(html);
+		expect(result).toEqual({
+			tag: "img",
+			attributes: {
+				src: "test.jpg",
+				alt: "test",
+			},
+		});
+	});
 
-    test('handles HTML to JSON to HTML roundtrip', () => {
-        const originalHtml = '<div class="test"><p>Hello</p></div>';
-        const json = converter.toJSON(originalHtml);
-        const html = converter.toHTML(json).trim();
-        
-        // Convert both back to JSON to compare (since HTML whitespace might differ)
-        const originalJson = converter.toJSON(originalHtml);
-        const finalJson = converter.toJSON(html);
-        
-        expect(finalJson).toEqual(originalJson);
-    });
+	test("handles invalid HTML where void elements have children gracefully", () => {
+		const html = '<img src="test.jpg">Invalid content</img>';
+		const result = converter.toJSON(html);
+		expect(result.tag).toBe("img");
+		expect(result.children).toBeUndefined(); // No children due to parser correction
+	});
 
-    test('handles malformed HTML', () => {
-        const html = '<div>Unclosed div';
-        expect(() => converter.toJSON(html)).not.toThrow();
-    });
+	test("handles HTML to JSON to HTML roundtrip", () => {
+		const originalHtml = '<div class="test"><p>Hello</p></div>';
+		const json = converter.toJSON(originalHtml);
+		const html = converter.toHTML(json).trim();
 
-    test('throws error for empty input', () => {
-        expect(() => converter.toJSON('')).toThrow('No HTML element found');
-    });
+		// Convert both back to JSON to compare (since HTML whitespace might differ)
+		const originalJson = converter.toJSON(originalHtml);
+		const finalJson = converter.toJSON(html);
+
+		expect(finalJson).toEqual(originalJson);
+	});
+
+	test("handles malformed HTML", () => {
+		const html = "<div>Unclosed div";
+		expect(() => converter.toJSON(html)).not.toThrow();
+		const result = converter.toJSON(html);
+		expect(result.tag).toBe("div");
+		expect(result.children).toEqual(["Unclosed div"]);
+	});
+
+	test("throws error for empty input", () => {
+		expect(() => converter.toJSON("")).toThrow("No HTML element found");
+	});
 });

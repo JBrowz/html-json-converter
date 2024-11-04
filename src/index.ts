@@ -1,5 +1,6 @@
 import { JSDOM } from "jsdom";
 
+// Core interfaces and types
 export interface HTMLNode {
 	tag: string;
 	attributes?: Record<string, string>;
@@ -13,135 +14,263 @@ export enum HTMLElementType {
 	FOREIGN = "foreign",
 }
 
+export interface ElementTypeConfig {
+	type: HTMLElementType;
+	allowChildren?: boolean;
+	allowAttributes?: boolean;
+}
+
+/**
+ * ConverterConfig interface to define configuration options
+ * @property useTab : boolean - Use tabs for indentation
+ * @property tabSize : number - Number of spaces for indentation
+ * @property customElements : Record<string, ElementTypeConfig> - Custom element configurations
+ */
+
+export interface ConverterConfig {
+	useTab?: boolean;
+	tabSize?: number;
+	customElements?: Record<string, ElementTypeConfig>;
+}
+
 const NODE_TYPES = {
 	ELEMENT_NODE: 1,
 	TEXT_NODE: 3,
 } as const;
 
-class ElementTypeMap {
-	private readonly elementTypes: Record<string, HTMLElementType> = {
-		// Regular elements
-		div: HTMLElementType.NORMAL,
-		span: HTMLElementType.NORMAL,
-		p: HTMLElementType.NORMAL,
-		h1: HTMLElementType.NORMAL,
-		h2: HTMLElementType.NORMAL,
-		h3: HTMLElementType.NORMAL,
-		h4: HTMLElementType.NORMAL,
-		h5: HTMLElementType.NORMAL,
-		h6: HTMLElementType.NORMAL,
-		article: HTMLElementType.NORMAL,
-		section: HTMLElementType.NORMAL,
-		nav: HTMLElementType.NORMAL,
-		aside: HTMLElementType.NORMAL,
-		header: HTMLElementType.NORMAL,
-		footer: HTMLElementType.NORMAL,
-		address: HTMLElementType.NORMAL,
-		main: HTMLElementType.NORMAL,
-		body: HTMLElementType.NORMAL,
-		html: HTMLElementType.NORMAL,
-		ul: HTMLElementType.NORMAL,
-		ol: HTMLElementType.NORMAL,
-		li: HTMLElementType.NORMAL,
-		table: HTMLElementType.NORMAL,
-		tr: HTMLElementType.NORMAL,
-		td: HTMLElementType.NORMAL,
-		th: HTMLElementType.NORMAL,
-		form: HTMLElementType.NORMAL,
-		label: HTMLElementType.NORMAL,
-		a: HTMLElementType.NORMAL,
-		button: HTMLElementType.NORMAL,
+/**
+ * ElementRegistry class to manage element configurations
+ */
+
+class ElementRegistry {
+	private static instance: ElementRegistry;
+	private elementConfigs: Map<string, ElementTypeConfig>;
+
+	private readonly defaultElements: Record<string, ElementTypeConfig> = {
+		a: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		abbr: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		address: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		article: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		aside: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		audio: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		b: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		bdi: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		bdo: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		blockquote: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		body: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		button: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		canvas: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		caption: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		cite: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		code: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		colgroup: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		data: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		datalist: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		dd: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		del: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		details: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		dfn: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		dialog: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		div: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		dl: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		dt: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		em: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		fieldset: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		figcaption: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		figure: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		footer: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		form: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		h1: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		h2: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		h3: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		h4: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		h5: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		h6: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		head: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		header: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		hgroup: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		html: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		i: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		iframe: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		ins: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		kbd: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		label: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		legend: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		li: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		main: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		map: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		mark: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		menu: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		meter: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		nav: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		noscript: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		object: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		ol: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		optgroup: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		option: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		output: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		p: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		picture: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		pre: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		progress: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		q: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		rp: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		rt: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		ruby: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		s: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		samp: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		section: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		select: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		small: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		span: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		strong: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		sub: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		summary: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		sup: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		table: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		tbody: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		td: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		template: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		tfoot: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		th: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		thead: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		time: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		tr: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		u: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		ul: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		var: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
+		video: { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true },
 
 		// Void elements
-		area: HTMLElementType.VOID,
-		base: HTMLElementType.VOID,
-		br: HTMLElementType.VOID,
-		col: HTMLElementType.VOID,
-		embed: HTMLElementType.VOID,
-		hr: HTMLElementType.VOID,
-		img: HTMLElementType.VOID,
-		input: HTMLElementType.VOID,
-		link: HTMLElementType.VOID,
-		meta: HTMLElementType.VOID,
-		source: HTMLElementType.VOID,
-		track: HTMLElementType.VOID,
-		wbr: HTMLElementType.VOID,
+		area: { type: HTMLElementType.VOID, allowChildren: false, allowAttributes: true },
+		base: { type: HTMLElementType.VOID, allowChildren: false, allowAttributes: true },
+		br: { type: HTMLElementType.VOID, allowChildren: false, allowAttributes: true },
+		col: { type: HTMLElementType.VOID, allowChildren: false, allowAttributes: true },
+		embed: { type: HTMLElementType.VOID, allowChildren: false, allowAttributes: true },
+		hr: { type: HTMLElementType.VOID, allowChildren: false, allowAttributes: true },
+		img: { type: HTMLElementType.VOID, allowChildren: false, allowAttributes: true },
+		input: { type: HTMLElementType.VOID, allowChildren: false, allowAttributes: true },
+		keygen: { type: HTMLElementType.VOID, allowChildren: false, allowAttributes: true },
+		link: { type: HTMLElementType.VOID, allowChildren: false, allowAttributes: true },
+		meta: { type: HTMLElementType.VOID, allowChildren: false, allowAttributes: true },
+		param: { type: HTMLElementType.VOID, allowChildren: false, allowAttributes: true },
+		source: { type: HTMLElementType.VOID, allowChildren: false, allowAttributes: true },
+		track: { type: HTMLElementType.VOID, allowChildren: false, allowAttributes: true },
+		wbr: { type: HTMLElementType.VOID, allowChildren: false, allowAttributes: true },
 
 		// Raw text elements
-		script: HTMLElementType.RAW_TEXT,
-		style: HTMLElementType.RAW_TEXT,
-		textarea: HTMLElementType.RAW_TEXT,
-		title: HTMLElementType.RAW_TEXT,
+		script: { type: HTMLElementType.RAW_TEXT, allowChildren: true, allowAttributes: true },
+		style: { type: HTMLElementType.RAW_TEXT, allowChildren: true, allowAttributes: true },
+		textarea: { type: HTMLElementType.RAW_TEXT, allowChildren: true, allowAttributes: true },
+		title: { type: HTMLElementType.RAW_TEXT, allowChildren: true, allowAttributes: true },
 
 		// Foreign elements
-		svg: HTMLElementType.FOREIGN,
-		math: HTMLElementType.FOREIGN,
+		svg: { type: HTMLElementType.FOREIGN, allowChildren: true, allowAttributes: true },
+		math: { type: HTMLElementType.FOREIGN, allowChildren: true, allowAttributes: true },
 	};
 
-	getElementType(tagName: string): HTMLElementType {
-		return this.elementTypes[tagName.toLowerCase()] || HTMLElementType.NORMAL;
+	private constructor() {
+		this.elementConfigs = new Map(Object.entries(this.defaultElements));
+	}
+
+	public static getInstance(): ElementRegistry {
+		if (!ElementRegistry.instance) {
+			ElementRegistry.instance = new ElementRegistry();
+		}
+		return ElementRegistry.instance;
+	}
+	/**
+	 * Register a new element with its configuration
+	 * @param tagName : string
+	 * @param config : ElementTypeConfig
+	 */
+	public registerElement(tagName: string, config: ElementTypeConfig): void {
+		this.elementConfigs.set(tagName.toLowerCase(), config);
+	}
+
+	/**
+	 * Register multiple elements with their configurations
+	 * @param elements : Record<string, ElementTypeConfig>
+	 */
+
+	public registerElements(elements: Record<string, ElementTypeConfig>): void {
+		for (const [tag, config] of Object.entries(elements)) {
+			this.registerElement(tag, config);
+		}
+	}
+
+	/**
+	 * Get the configuration for an element
+	 * @param tagName : string
+	 * @returns ElementTypeConfig
+	 */
+
+	public getElementConfig(tagName: string): ElementTypeConfig {
+		const config = this.elementConfigs.get(tagName.toLowerCase());
+		return config || { type: HTMLElementType.NORMAL, allowChildren: true, allowAttributes: true };
+	}
+
+	/**
+	 * Remove an element from the registry
+	 * @param tagName : string
+	 */
+
+	public removeElement(tagName: string): void {
+		this.elementConfigs.delete(tagName.toLowerCase());
+	}
+
+	public reset(): void {
+		this.elementConfigs = new Map(Object.entries(this.defaultElements));
 	}
 }
 
 /**
- * Class to convert HTML to JSON and vice versa (Server-side)
- * @param useTab - Use tabs for indentation (default: true)
- * @param tabSize - Number of spaces per tab (default: 1)
+ * @constructor takes an optional config object of type ConverterConfig
+ * @type {config} : ConverterConfig
  */
 
-export class HTMLJSONConverter {
+export abstract class BaseHTMLJSONConverter {
 	protected static readonly DOCUMENT_INDICATORS = ["<html", "<?xml"];
 	protected readonly useTab: boolean;
 	protected readonly tabSize: number;
-	protected readonly elementTypeMap: ElementTypeMap;
+	protected readonly registry: ElementRegistry;
 
-	constructor(useTab = true, tabSize = 1) {
-		this.useTab = useTab;
-		this.tabSize = tabSize;
-		this.elementTypeMap = new ElementTypeMap();
+	constructor(config?: ConverterConfig) {
+		this.useTab = config?.useTab ?? true;
+		this.tabSize = config?.tabSize ?? 1;
+		this.registry = ElementRegistry.getInstance();
+
+		if (config?.customElements) {
+			this.registry.registerElements(config.customElements);
+		}
 	}
 
+	protected abstract parseHTML(html: string): Element;
+
 	/**
-	 * Convert HTML string to JSON
-	 * @param html - HTML string
+	 * 
+	 * @param html : string
+	 * @returns HTMLNode
 	 */
-
-	toJSON(html: string): HTMLNode {
+	public toJSON(html: string): HTMLNode {
 		const trimmedHtml = html.trim();
-
 		if (!trimmedHtml) {
 			throw new Error("No HTML element found");
 		}
 
-		// Remove DOCTYPE if present to avoid treating it as a full document
 		const htmlWithoutDoctype = trimmedHtml.replace(/<!DOCTYPE[^>]*>/i, "").trim();
-
-		const isFullDocument = HTMLJSONConverter.DOCUMENT_INDICATORS.some((indicator) =>
-			htmlWithoutDoctype.toLowerCase().startsWith(indicator.toLowerCase()),
-		);
-
-		const dom = new JSDOM(htmlWithoutDoctype);
-		const { documentElement, body, head } = dom.window.document;
-
-		if (isFullDocument && documentElement?.tagName.toLowerCase() === "html") {
-			return this.elementToJSON(documentElement);
-		}
-
-		// For fragments or DOCTYPE + single element, look for first meaningful element
-		const firstElement = body.firstElementChild || head.firstElementChild;
-		if (!firstElement) {
-			throw new Error("No HTML element found");
-		}
-
-		return this.elementToJSON(firstElement);
+		const element = this.parseHTML(htmlWithoutDoctype);
+		return this.elementToJSON(element);
 	}
 
 	/**
-	 * Convert JSON to HTML string
-	 * @param node - HTMLNode | string
+	 * 
+	 * @param node 
+	 * @param level (default = 0)
+	 * @returns html string
 	 */
 
-	toHTML(node: HTMLNode | string, level = 0): string {
+	public toHTML(node: HTMLNode | string, level = 0): string {
 		if (typeof node === "string") {
 			const text = node.trim();
 			return text ? `${this.getIndent(level)}${text}\n` : "";
@@ -151,43 +280,49 @@ export class HTMLJSONConverter {
 		let html = `${indent}<${node.tag}`;
 
 		if (node.attributes) {
-			for (const [key, value] of Object.entries(node.attributes)) {
-				html += ` ${key}="${value}"`;
+			html += this.serializeAttributes(node.attributes);
+		}
+
+		const elementConfig = this.registry.getElementConfig(node.tag);
+
+		// **Void Elements**
+		if (elementConfig.type === HTMLElementType.VOID) {
+			// **Void elements must not have children**
+			if (node.children && node.children.length > 0) {
+				throw new Error(`Void element <${node.tag}> cannot have children.`);
 			}
+			// **Ensure void elements are self-closing**
+			return `${html}/>\n`;
 		}
 
-		const elementType = this.elementTypeMap.getElementType(node.tag);
+		// **Non-Void Elements**
+		// **Ensure they are not self-closed (do not use "/>")**
+		html += ">";
 
-		switch (elementType) {
-			case HTMLElementType.VOID:
-				return `${html}/>\n`;
-
-			case HTMLElementType.RAW_TEXT:
-				html += ">";
-				if (node.children) {
-					html += "\n";
-					html += this.getIndent(level + 1);
-					html += node.children.join("").trim();
-					html += "\n";
-					html += indent;
-				}
-				return `${html}</${node.tag}>\n`;
-
-			default:
-				html += ">";
-				if (node.children?.length) {
-					html += "\n";
-					for (const child of node.children) {
-						html += this.toHTML(child, level + 1);
-					}
-					html += indent;
-				}
-				return `${html}</${node.tag}>\n`;
+		if (elementConfig.type === HTMLElementType.RAW_TEXT) {
+			if (node.children?.length) {
+				html += node.children.join("").trim();
+			}
+		} else if (node.children?.length) {
+			html += "\n";
+			for (const child of node.children) {
+				html += this.toHTML(child, level + 1);
+			}
+			html += indent;
 		}
+
+		// **Add closing tag for non-void elements**
+		return `${html}</${node.tag}>\n`;
 	}
 
 	protected getIndent(level: number): string {
 		return this.useTab ? "\t".repeat(level * this.tabSize) : " ".repeat(level * this.tabSize * 2);
+	}
+
+	protected serializeAttributes(attributes: Record<string, string>): string {
+		return Object.entries(attributes)
+			.map(([key, value]) => ` ${key}="${value}"`)
+			.join("");
 	}
 
 	protected elementToJSON(element: Element): HTMLNode {
@@ -195,8 +330,23 @@ export class HTMLJSONConverter {
 			tag: element.tagName.toLowerCase(),
 		};
 
-		this.processAttributes(element, node);
-		this.processChildren(element, node);
+		const elementConfig = this.registry.getElementConfig(node.tag);
+
+		if (elementConfig.allowAttributes) {
+			this.processAttributes(element, node);
+		}
+
+		// **Check if the element is a void element**
+		if (elementConfig.type === HTMLElementType.VOID) {
+			// **Void elements should not have children**
+			if (element.childNodes.length > 0) {
+				throw new Error(`Void element <${node.tag}> must not have children.`);
+			}
+		} else {
+			// **Non-void elements must not be self-closing (cannot be void)**
+			// **Process children as usual**
+			this.processChildren(element, node);
+		}
 
 		return node;
 	}
@@ -205,7 +355,7 @@ export class HTMLJSONConverter {
 		const attributes = element.attributes;
 		if (attributes.length > 0) {
 			node.attributes = {};
-			for (const attribute of Array.from(attributes) as Attr[]) {
+			for (const attribute of Array.from(attributes)) {
 				if (!node.attributes) return;
 				node.attributes[attribute.name] = attribute.value;
 			}
@@ -213,13 +363,9 @@ export class HTMLJSONConverter {
 	}
 
 	protected processChildren(element: Element, node: HTMLNode): void {
-		const elementType = this.elementTypeMap.getElementType(node.tag);
+		const elementConfig = this.registry.getElementConfig(node.tag);
 
-		if (elementType === HTMLElementType.VOID) {
-			return;
-		}
-
-		if (elementType === HTMLElementType.RAW_TEXT) {
+		if (elementConfig.type === HTMLElementType.RAW_TEXT) {
 			const text = element.textContent?.trim();
 			if (text) {
 				node.children = [text];
@@ -227,12 +373,12 @@ export class HTMLJSONConverter {
 			return;
 		}
 
-		const childNodes: NodeList = element.childNodes;
+		const childNodes = element.childNodes;
 
 		if (childNodes.length > 0) {
 			node.children = [];
 
-			for (const child of Array.from(childNodes as NodeList)) {
+			for (const child of Array.from(childNodes)) {
 				if (child.nodeType === NODE_TYPES.TEXT_NODE) {
 					const text = (child as Text).textContent?.trim();
 					if (text) {
@@ -250,102 +396,60 @@ export class HTMLJSONConverter {
 	}
 }
 
-
 /**
- * Class to convert HTML to JSON and vice versa (Client-side)
+ * Server-side HTML-JSON Converter
+ * Uses JSDOM to parse HTML
+ * Suitable for server-side environments
+ * @extends BaseHTMLJSONConverter
  */
-export class ClientHTMLJSONConverter extends HTMLJSONConverter {
-    private readonly parser: DOMParser;
+export class ServerHTMLJSONConverter extends BaseHTMLJSONConverter {
+	protected parseHTML(html: string): Element {
+		const dom = new JSDOM(html);
+		const { documentElement, body, head } = dom.window.document;
 
-    constructor(useTab = true, tabSize = 1) {
-        super(useTab, tabSize);
-        this.parser = new DOMParser();
-    }
+		const isFullDocument = BaseHTMLJSONConverter.DOCUMENT_INDICATORS.some((indicator) =>
+			html.toLowerCase().startsWith(indicator.toLowerCase())
+		);
 
-    override toJSON(html: string): HTMLNode {
-        const trimmedHtml = html.trim();
+		if (isFullDocument && documentElement?.tagName.toLowerCase() === "html") {
+			return documentElement;
+		}
 
-        if (!trimmedHtml) {
-            throw new Error("No HTML element found");
-        }
+		const firstElement = body.firstElementChild || head.firstElementChild;
+		if (!firstElement) {
+			throw new Error("No HTML element found");
+		}
 
-        const htmlWithoutDoctype = trimmedHtml.replace(/<!DOCTYPE[^>]*>/i, "").trim();
+		return firstElement;
+	}
+}
 
-        const isFullDocument = HTMLJSONConverter.DOCUMENT_INDICATORS.some((indicator) =>
-            htmlWithoutDoctype.toLowerCase().startsWith(indicator.toLowerCase())
-        );
+// Client-side implementation
+export class ClientHTMLJSONConverter extends BaseHTMLJSONConverter {
+	private readonly parser: DOMParser;
 
-        const doc = this.parser.parseFromString(htmlWithoutDoctype, "text/html");
-        const { documentElement, body, head } = doc;
+	constructor(config?: ConverterConfig) {
+		super(config);
+		this.parser = new DOMParser();
+	}
 
-        if (isFullDocument && documentElement?.tagName.toLowerCase() === "html") {
-            return this.elementToJSON(documentElement);
-        }
+	protected parseHTML(html: string): Element {
+		const doc = this.parser.parseFromString(html, "text/html");
+		const { documentElement, body, head } = doc;
 
-        const firstElement = body.firstElementChild || head.firstElementChild;
-        if (!firstElement) {
-            throw new Error("No HTML element found");
-        }
+		const isFullDocument = BaseHTMLJSONConverter.DOCUMENT_INDICATORS.some((indicator) =>
+			html.toLowerCase().startsWith(indicator.toLowerCase())
+		);
 
-        return this.elementToJSON(firstElement);
-    }
+		if (isFullDocument && documentElement?.tagName.toLowerCase() === "html") {
+			return documentElement;
+		}
 
-    protected override elementToJSON(element: Element): HTMLNode {
-        const node: HTMLNode = {
-            tag: element.tagName.toLowerCase(),
-        };
+		const firstElement = body.firstElementChild || head.firstElementChild;
+		if (!firstElement) {
+			throw new Error("No HTML element found");
+		}
 
-        this.processAttributes(element, node);
-        this.processChildren(element, node);
-
-        return node;
-    }
-
-    protected override processAttributes(element: Element, node: HTMLNode): void {
-        const attributes = element.attributes;
-        if (attributes.length > 0) {
-            node.attributes = {};
-            for (const attribute of Array.from(attributes)) {
-                if (!node.attributes) return;
-                node.attributes[attribute.name] = attribute.value;
-            }
-        }
-    }
-
-    protected override processChildren(element: Element, node: HTMLNode): void {
-        const elementType = this.elementTypeMap.getElementType(node.tag);
-
-        if (elementType === HTMLElementType.VOID) {
-            return;
-        }
-
-        if (elementType === HTMLElementType.RAW_TEXT) {
-            const text = element.textContent?.trim();
-            if (text) {
-                node.children = [text];
-            }
-            return;
-        }
-
-        const childNodes = element.childNodes;
-
-        if (childNodes.length > 0) {
-            node.children = [];
-
-            for (const child of Array.from(childNodes)) {
-                if (child.nodeType === Node.TEXT_NODE) {
-                    const text = child.textContent?.trim();
-                    if (text) {
-                        node.children.push(text);
-                    }
-                } else if (child.nodeType === Node.ELEMENT_NODE) {
-                    node.children.push(this.elementToJSON(child as Element));
-                }
-            }
-
-            if (node.children.length === 0) {
-                node.children = undefined;
-            }
-        }
-    }
+		return firstElement;
+	}
 }
