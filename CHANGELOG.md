@@ -1,5 +1,11 @@
 # html-json-converter
 
+## 3.1.0
+
+### Minor Changes
+
+- b67f0ff: Moved client side and server side to thier seperate files and hence can offer seperate imports, fixing the issue of dependency. Some of the exports maybe deprecated or moved to a new file. You may refer to project structure for more info.
+
 ## 3.0.0
 
 ### Major Changes
