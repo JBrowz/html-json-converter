@@ -1,5 +1,11 @@
 # html-json-converter
 
+## 3.1.1
+
+### Patch Changes
+
+- c8961dd: Fixed the issue of not able to import the specific type (client/server) of the package
+
 ## 3.1.0
 
 ### Minor Changes
