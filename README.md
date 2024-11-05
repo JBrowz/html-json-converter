@@ -21,6 +21,8 @@ A TypeScript library to convert HTML to JSON and vice versa. Supports both Node.
   - [Examples](#examples)
     - [Handling Malformed HTML](#handling-malformed-html)
     - [Enforcing Rules During Conversion](#enforcing-rules-during-conversion)
+    - [Using in Next.js (Client-Side)](#using-in-nextjs-client-side)
+    - [For Using in server side in Next.js](#for-using-in-server-side-in-nextjs)
   - [Feedback and Contributions](#feedback-and-contributions)
 
 ---
@@ -163,8 +165,6 @@ const json = converter.toJSON(html);
 }
 */
 ```
-
-Certainly! Below is a table that lists all the HTML elements supported by default by the **HTML JSON Converter**. The table includes the element name, its type, and whether it allows children and attributes.
 
 ---
 
@@ -454,6 +454,76 @@ try {
   // Output: Void element <br> cannot have children.
 }
 ```
+
+### Using in Next.js (Client-Side)
+
+```tsx
+"use client";
+
+import { useState, useEffect } from 'react';
+import { ClientHTMLJSONConverter } from 'html-json-converter/client';
+
+export default function Demo() {
+    const [htmlJSON, setHtmlJSON] = useState<string | null>(null);
+
+    useEffect(() => {
+        const converter = new ClientHTMLJSONConverter();
+        const complexHTMLString = `<div>
+                                    <h1>My Title</h1>
+                                    <p>My paragraph</p>
+                                    <div>
+                                        <h2>My Subtitle</h2>
+                                        <p>My sub paragraph</p>
+                                    </div>
+                                    <section style="color:red;">
+                                        <h3>My Subtitle</h3>
+                                        <p>My sub paragraph</p>
+                                    </section>
+                                    <img src="https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png" alt="Google Logo" />
+                                    </div>`;
+        const json = converter.toJSON(complexHTMLString);
+        setHtmlJSON(JSON.stringify(json));
+    }, []);
+
+    return (
+        <div className="max-w-5xl mx-auto text-left font-mono">
+            {htmlJSON}
+        </div>
+    );
+}
+```
+
+### For Using in server side in Next.js
+
+```tsx
+import { ServerHTMLJSONConverter } from 'html-json-converter/server';
+
+export default async function Demo() {
+    const complexHTMLString = `<div>
+                                <h1>My Title</h1>
+                                <p>My paragraph</p>
+                                <div>
+                                    <h2>My Subtitle</h2>
+                                    <p>My sub paragraph</p>
+                                </div>
+                                <section style="color:red;">
+                                    <h3>My Subtitle</h3>
+                                    <p>My sub paragraph</p>
+                                </section>
+                                <img src="https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png" alt="Google Logo" />
+                                </div>`;
+    const converter = new ServerHTMLJSONConverter();
+    const json = converter.toJSON(complexHTMLString);
+
+    return (
+        <div className="max-w-5xl mx-auto text-left font-mono">
+            {JSON.stringify(json, null, 2)}
+        </div>
+    );
+}
+```
+
+Note: Tested only for Next.js 14.2.11
 
 ---
 

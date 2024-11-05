@@ -49,7 +49,7 @@
     "json to html converter"
   ],
   "engines": {
-    "node": ">=12"
+    "node": ">=16"
   },
   "author": "Techlism <kundan@techlism.in> (https://github.com/techlism)",
   "bugs": {
